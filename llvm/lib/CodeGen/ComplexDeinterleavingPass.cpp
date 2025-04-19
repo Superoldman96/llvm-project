@@ -1168,7 +1168,7 @@ ComplexDeinterleavingGraph::identifyReassocNodes(Instruction *Real,
       // the latter case, we will attempt to separately identify the complex
       // operation from here in order to create a shared
       // ComplexDeinterleavingCompositeNode.
-      if (I != Insn && I->getNumUses() > 1) {
+      if (I != Insn && I->hasNUsesOrMore(2)) {
         LLVM_DEBUG(dbgs() << "Found potential sub-expression: " << *I << "\n");
         Addends.emplace_back(I, IsPositive);
         continue;
@@ -2332,8 +2332,9 @@ void ComplexDeinterleavingGraph::replaceNodes() {
     } else if (RootNode->Operation ==
                ComplexDeinterleavingOperation::ReductionSingle) {
       auto *RootInst = cast<Instruction>(RootNode->Real);
-      ReductionInfo[RootInst].first->removeIncomingValue(BackEdge);
-      DeadInstrRoots.push_back(ReductionInfo[RootInst].second);
+      auto &Info = ReductionInfo[RootInst];
+      Info.first->removeIncomingValue(BackEdge);
+      DeadInstrRoots.push_back(Info.second);
     } else {
       assert(R && "Unable to find replacement for RootInstruction");
       DeadInstrRoots.push_back(RootInstruction);
